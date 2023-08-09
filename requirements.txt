@@ -1,0 +1,2 @@
+pycodestyle==2.11.0
+locust==2.16.1
