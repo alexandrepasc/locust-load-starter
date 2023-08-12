@@ -55,47 +55,45 @@ def create_file(__path: str, __name: str):
         f.close()
 
 
-# def build_file_content(__dic: dict, __file: str, __ep: str,
-#                        __class_name: str, __method: str):
-#     if os.path.exists(__file):
-#         with open(__file, "a") as f:
-#             oid: str = __method + "_" + __dic["operationId"]
-#
-#             cn: str = sub(r"(-)+", " ", __class_name).title().replace(" ", "")
-#
-#             w: str = f"from locust import TaskSet\n\n" \
-#                      f"ENDPOINT = \"{__ep}\"\n\n\n" \
-#                      f"class {cn}(TaskSet):\n" \
-#                      f"    def {oid}(self):\n\n" \
-#                      f"        response = self.client.get(\n" \
-#                      f"            ENDPOINT,\n" \
-#                      f"            name=\"{oid}\"\n" \
-#                      f"        )\n\n" \
-#                      f"        return response" \
-#                      f"\n"
-#
-#             f.write(w)
-
-
-def build_file_content(__dic: dict, __file: str, __ep: str,
+def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                        __class_name: str):
     if os.path.exists(__file):
         with open(__file, "a") as f:
 
             cn: str = sub(r"(-)+", " ", __class_name).title().replace(" ", "")
 
-            w: str = f"from locust import TaskSet\n\n" \
+            w: str = f"from http.cookiejar import CookieJar\n\n" \
+                     f"import locust\n\n" \
                      f"ENDPOINT = \"{__ep}\"\n\n\n" \
-                     f"class {cn}(TaskSet):"
+                     f"class {cn}:\n" \
+                     f"    def __init__(self, loc: locust.user.users):\n" \
+                     f"        self.loc = loc\n"
             f.write(w)
 
             for mk, mi in __dic.items():
                 oid: str = mk + "_" + mi["operationId"]
+
+                if "parameters" in mi:
+                    param: str = "              " \
+                                 "params: dict[str, any] = None,\n"
+                    param_entry: str = "            params=params,\n"
+                else:
+                    param: str = ""
+                    param_entry: str = ""
+
                 wm: str = f"\n" \
-                          f"    def {oid}(self):\n\n" \
-                          f"        response = self.client.{mk}(\n" \
+                          f"    def {oid}(self,\n" \
+                          f"{param}" \
+                          f"              headers: dict[str, any] = None,\n" \
+                          f"              cookies: CookieJar = None,\n" \
+                          f"              redirect: bool = False):\n\n" \
+                          f"        response = self.loc.client.{mk}(\n" \
                           f"            ENDPOINT,\n" \
-                          f"            name=\"{oid}\"\n" \
+                          f"{param_entry}" \
+                          f"            headers=headers,\n" \
+                          f"            cookies=cookies,\n" \
+                          f"            name=\"{oid}\",\n" \
+                          f"            allow_redirects=redirect\n" \
                           f"        )\n\n" \
                           f"        return response\n"
                 f.write(wm)
@@ -111,13 +109,9 @@ def generate_artifacts(__content: dict, __path: str):
 
         create_file(__file_path, __file_name)
 
-        build_file_content(y, __file_path + "/" + __file_name, x,
+        build_file_content(y, __file_path + "/" + __file_name,
+                           __file_path, x,
                            x.split("/")[len(x.split("/")) - 2])
-        # for mk, mi in y.items():
-        #     print(mk)
-        #     print(mi["operationId"])
-        #     build_file_content(mi, __file_path + "/" + __file_name,
-        #                        x, x.split("/")[len(x.split("/")) - 2], mk)
 
 
 if __name__ == "__main__":
