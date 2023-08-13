@@ -55,8 +55,33 @@ def create_file(__path: str, __name: str):
         f.close()
 
 
+def generate_parameters_dict(__path: str, __name: str, __params: dict):
+    # print(__params)
+    with open(f"{__path}/{__name}-parameters.py", "a") as f:
+        w: str = ""
+
+        for i in __params:
+            print(f"{i}\n\n")
+            print(i["name"])
+            # for pk, pi in i.items():
+            #     print(pi)
+            if i["in"] == "query":
+                match i["schema"]["type"]:
+                    case "string":
+                        __type: str = "str"
+                    case "number":
+                        __type: str = "int"
+                    case "boolean":
+                        __type: str = "bool"
+
+                w = w + i["name"] + f": {__type}\n"
+
+        f.write(w)
+
+
 def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                        __class_name: str):
+
     if os.path.exists(__file):
         with open(__file, "a") as f:
 
@@ -76,9 +101,13 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                 if "parameters" in mi:
                     param: str = "              " \
                                  "params: dict[str, any] = None,\n"
+
                     param_entry: str = "            params=params,\n"
+
+                    generate_parameters_dict(__path, oid, mi["parameters"])
                 else:
                     param: str = ""
+
                     param_entry: str = ""
 
                 wm: str = f"\n" \
