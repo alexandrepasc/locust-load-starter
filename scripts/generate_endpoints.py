@@ -124,7 +124,11 @@ def generate_artifacts(__content: dict, __path: str):
         create_folder(__path, xs)
 
         __file_path = __path + xs
-        __file_name = xs.split("/")[len(x.split("/")) - 2] + ".py"
+
+        if x[len(x) - 1] == "/":
+            __file_name = xs.split("/")[len(x.split("/")) - 2] + ".py"
+        else:
+            __file_name = xs.split("/")[len(x.split("/")) - 1] + ".py"
 
         create_file(__file_path, __file_name)
 
