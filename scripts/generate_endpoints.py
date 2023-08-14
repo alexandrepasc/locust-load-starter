@@ -18,6 +18,14 @@ REQUESTS_CLASS_DOC: str = "#  This class contains a list of the functions " \
 
 REQUESTS_INIT_DOC: str = "#  Initialize the class with the locust instance."
 
+REQUESTS_ID_DOC: str = "#  This request needs an id to be included in the " \
+                       "endpoint path, be aware\n    #  that before " \
+                       "passing take in consideration if the endpoint " \
+                       "value set in\n    #  the ENDPOINT constant has or " \
+                       "not the '/' at the end. In case it hasn't,\n    " \
+                       "#  add the slash before the id (ex. " \
+                       "id=\"/qwer-1234-asdasdasd-123\")."
+
 PARAMETERS_DOC: str = "#  List of all the parameters exposed in the swagger" \
                       " file, with a comment\n#  referring the type, that " \
                       "can be used when creating the test requests. The\n" \
@@ -155,26 +163,87 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                 f.write(wm)
 
 
+def append_path_parameter_content(__file_path: str, __file_name: str,
+                                  __dict: dict):
+    if os.path.exists(__file_path + "/" + __file_name):
+        with open(__file_path + "/" + __file_name, "a") as f:
+            for mk, mi in __dict.items():
+                oid: str = mk + "_" + mi["operationId"] + "_id"
+
+                if "parameters" in mi:
+                    param: str = "              " \
+                                 "params: dict[str, any] = None,\n"
+
+                    param_entry: str = "            params=params,\n"
+
+                    generate_parameters_list(__file_path, oid,
+                                             mi["parameters"])
+                else:
+                    param: str = ""
+
+                    param_entry: str = ""
+
+                wm: str = f"\n" \
+                          f"    {REQUESTS_ID_DOC}\n" \
+                          f"    def {oid}(self,\n" \
+                          f"              id: str,\n" \
+                          f"{param}" \
+                          f"              headers: dict[str, any] = None,\n" \
+                          f"              cookies: CookieJar = None,\n" \
+                          f"              auth: tuple[str, str] = None,\n" \
+                          f"              json: any = None,\n" \
+                          f"              data: dict[str, any] = None,\n" \
+                          f"              files: dict[str, any] = None,\n" \
+                          f"              redirect: bool = False,\n" \
+                          f"              verify: bool = True):\n\n" \
+                          f"        response = self.loc.client.{mk}(\n" \
+                          f"            ENDPOINT + id,\n" \
+                          f"{param_entry}" \
+                          f"            headers=headers,\n" \
+                          f"            cookies=cookies,\n" \
+                          f"            auth=auth,\n" \
+                          f"            json=json,\n" \
+                          f"            data=data,\n" \
+                          f"            files=files,\n" \
+                          f"            name=\"{oid}\",\n" \
+                          f"            allow_redirects=redirect,\n" \
+                          f"            verify=verify\n" \
+                          f"        )\n\n" \
+                          f"        return response\n"
+                f.write(wm)
+
+
 #  Manage the creation of the artifacts and write their content.
 def generate_artifacts(__content: dict, __path: str):
 
     for x, y in __content["paths"].items():
         xs: str = sub(r"(-)+", " ", x).replace(" ", "_")
 
-        create_folder(__path, xs)
-
-        __file_path = __path + xs
-
         if x[len(x) - 1] == "/":
-            __file_name = xs.split("/")[len(x.split("/")) - 2] + ".py"
+            __file_name: str = xs.split("/")[len(x.split("/")) - 2] + ".py"
+            __class_name: str = x.split("/")[len(x.split("/")) - 2]
         else:
-            __file_name = xs.split("/")[len(x.split("/")) - 1] + ".py"
+            __file_name: str = xs.split("/")[len(x.split("/")) - 1] + ".py"
+            __class_name: str = x.split("/")[len(x.split("/")) - 1]
 
-        create_file(__file_path, __file_name)
+        if not str.__contains__(__file_name, "{"):
+            create_folder(__path, xs)
 
-        build_file_content(y, __file_path + "/" + __file_name,
-                           __file_path, xs,
-                           x.split("/")[len(x.split("/")) - 2])
+            __file_path: str = __path + xs
+
+            create_file(__file_path, __file_name)
+
+            build_file_content(y, __file_path + "/" + __file_name,
+                               __file_path, xs, __class_name)
+        else:
+            if xs[len(xs) - 1] == "/":
+                xs = xs[:len(xs) - 1]
+                xs = xs[:xs.rfind("/")]
+            else:
+                xs = xs[:xs.rfind("/")]
+
+            __file_name: str = xs.split("/")[len(xs.split("/")) - 1] + ".py"
+            append_path_parameter_content(__path + xs, __file_name, y)
 
 
 #  Main function that will be executed.
