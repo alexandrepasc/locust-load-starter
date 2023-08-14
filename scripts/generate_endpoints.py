@@ -25,6 +25,7 @@ PARAMETERS_DOC: str = "#  List of all the parameters exposed in the swagger" \
                       "function in the class of\n#  this folder."
 
 
+#  Generate the base path in the project to store the endpoints artifacts.
 def manage_endpoint_path():
     script_path: str = os.path.dirname(os.path.realpath(__file__))
 
@@ -36,6 +37,7 @@ def manage_endpoint_path():
     return endpoints_path
 
 
+#  Manage the command line arguments that the script supports.
 def manage_arguments():
     arg_parser = ArgumentParser(
         prog="generate_endpoints.py",
@@ -49,6 +51,7 @@ def manage_arguments():
     return args.file
 
 
+#  Open, read, and unserialize the yaml file.
 def get_yaml_content(__file: str):
     with open(__file, "r") as stream:
         try:
@@ -59,12 +62,14 @@ def get_yaml_content(__file: str):
     return __yml
 
 
+#  Create the folder to store the endpoint artifacts.
 def create_folder(__path: str, __folder: str):
 
     if not os.path.exists(__path + "/" + __folder):
         os.makedirs(__path + __folder)
 
 
+#  Create the class and init artifacts for the endpoint.
 def create_file(__path: str, __name: str):
     if not os.path.exists(__path + "/" + __name):
         f: TextIO = open(__path + "/" + __name, "x")
@@ -74,6 +79,7 @@ def create_file(__path: str, __name: str):
         f.close()
 
 
+#  Generate the parameters file with all the content.
 def generate_parameters_list(__path: str, __name: str, __params: dict):
     with open(f"{__path}/{__name}_parameters.py", "a") as f:
         w: str = f"{PARAMETERS_DOC}\n"
@@ -86,6 +92,7 @@ def generate_parameters_list(__path: str, __name: str, __params: dict):
         f.write(w)
 
 
+#  Add the content to the for the class file.
 def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                        __class_name: str):
 
@@ -148,6 +155,7 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                 f.write(wm)
 
 
+#  Manage the creation of the artifacts and write their content.
 def generate_artifacts(__content: dict, __path: str):
 
     for x, y in __content["paths"].items():
@@ -169,6 +177,7 @@ def generate_artifacts(__content: dict, __path: str):
                            x.split("/")[len(x.split("/")) - 2])
 
 
+#  Main function that will be executed.
 if __name__ == "__main__":
     __path: str = manage_endpoint_path()
 
