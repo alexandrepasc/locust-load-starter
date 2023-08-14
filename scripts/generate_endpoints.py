@@ -57,7 +57,7 @@ def create_file(__path: str, __name: str):
 
 def generate_parameters_dict(__path: str, __name: str, __params: dict):
     # print(__params)
-    with open(f"{__path}/{__name}-parameters.py", "a") as f:
+    with open(f"{__path}/{__name}_parameters.py", "a") as f:
         w: str = ""
 
         for i in __params:
@@ -131,15 +131,17 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
 def generate_artifacts(__content: dict, __path: str):
 
     for x, y in __content["paths"].items():
-        create_folder(__path, x)
+        xs: str = sub(r"(-)+", " ", x).replace(" ", "_")
 
-        __file_path = __path + x
-        __file_name = x.split("/")[len(x.split("/")) - 2] + ".py"
+        create_folder(__path, xs)
+
+        __file_path = __path + xs
+        __file_name = xs.split("/")[len(x.split("/")) - 2] + ".py"
 
         create_file(__file_path, __file_name)
 
         build_file_content(y, __file_path + "/" + __file_name,
-                           __file_path, x,
+                           __file_path, xs,
                            x.split("/")[len(x.split("/")) - 2])
 
 
