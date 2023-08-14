@@ -103,14 +103,24 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                           f"{param}" \
                           f"              headers: dict[str, any] = None,\n" \
                           f"              cookies: CookieJar = None,\n" \
-                          f"              redirect: bool = False):\n\n" \
+                          f"              auth: tuple[str, str] = None,\n" \
+                          f"              json: any = None,\n" \
+                          f"              data: dict[str, any] = None,\n" \
+                          f"              files: dict[str, any] = None,\n" \
+                          f"              redirect: bool = False,\n" \
+                          f"              verify: bool = True):\n\n" \
                           f"        response = self.loc.client.{mk}(\n" \
                           f"            ENDPOINT,\n" \
                           f"{param_entry}" \
                           f"            headers=headers,\n" \
                           f"            cookies=cookies,\n" \
+                          f"            auth=auth,\n" \
+                          f"            json=json,\n" \
+                          f"            data=data,\n" \
+                          f"            files=files,\n" \
                           f"            name=\"{oid}\",\n" \
-                          f"            allow_redirects=redirect\n" \
+                          f"            allow_redirects=redirect\n," \
+                          f"            verify=verify\n" \
                           f"        )\n\n" \
                           f"        return response\n"
                 f.write(wm)
