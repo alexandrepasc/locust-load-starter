@@ -5,6 +5,25 @@ from typing import TextIO
 
 import yaml
 
+REQUESTS_ENDPOINT: str = "#  The constant with the endpoint path used in " \
+                         "the class"
+
+REQUESTS_CLASS_DOC: str = "#  This class contains a list of the functions " \
+                          "for this endpoint with all the\n#  requests " \
+                          "that were exported from the swagger yaml " \
+                          "file. To use this you\n#  need to instantiate " \
+                          "the class and pass the locust into it and " \
+                          "after that we\n#  are able to start to build " \
+                          "the tests."
+
+REQUESTS_INIT_DOC: str = "#  Initialize the class with the locust instance."
+
+PARAMETERS_DOC: str = "#  List of all the parameters exposed in the swagger" \
+                      " file, with a comment\n#  referring the type, that " \
+                      "can be used when creating the test requests. The\n" \
+                      "#  name of this file is linked with a request " \
+                      "function in the class of\n#  this folder."
+
 
 def manage_endpoint_path():
     script_path: str = os.path.dirname(os.path.realpath(__file__))
@@ -57,7 +76,7 @@ def create_file(__path: str, __name: str):
 
 def generate_parameters_list(__path: str, __name: str, __params: dict):
     with open(f"{__path}/{__name}_parameters.py", "a") as f:
-        w: str = ""
+        w: str = f"{PARAMETERS_DOC}\n"
 
         for i in __params:
             if i["in"] == "query":
@@ -77,8 +96,11 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
 
             w: str = f"from http.cookiejar import CookieJar\n\n" \
                      f"import locust\n\n" \
+                     f"{REQUESTS_ENDPOINT}\n" \
                      f"ENDPOINT = \"{__ep}\"\n\n\n" \
+                     f"{REQUESTS_CLASS_DOC}\n" \
                      f"class {cn}:\n" \
+                     f"    {REQUESTS_INIT_DOC}\n" \
                      f"    def __init__(self, loc: locust.user.users):\n" \
                      f"        self.loc = loc\n"
             f.write(w)
@@ -119,7 +141,7 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                           f"            data=data,\n" \
                           f"            files=files,\n" \
                           f"            name=\"{oid}\",\n" \
-                          f"            allow_redirects=redirect\n," \
+                          f"            allow_redirects=redirect,\n" \
                           f"            verify=verify\n" \
                           f"        )\n\n" \
                           f"        return response\n"
