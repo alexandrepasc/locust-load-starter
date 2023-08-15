@@ -163,6 +163,7 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                 f.write(wm)
 
 
+#  Generate the methods to handle the support for endpoint path parameter
 def append_path_parameter_content(__file_path: str, __file_name: str,
                                   __dict: dict):
     if os.path.exists(__file_path + "/" + __file_name):
