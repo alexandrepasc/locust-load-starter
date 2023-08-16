@@ -5,6 +5,9 @@
   * [Getting Started](#getting-started)
   * [Build and Test](#build-and-test)
   * [Contribute](#contribute)
+  * [Appendix](#appendix)
+    * [Open API v3 yaml example](#open-api-v3-yaml-example)
+    * [Helping commands](#helping-commands)
 <!-- TOC -->
 ## Introduction
 This repository aims to ease the creation of a load testing project by mapping the api automatically from the OpenAPI v3 
@@ -158,15 +161,142 @@ the test. This script will create the `reports` folder in the location where the
 - `python run_tests.py -u 50 -r 5 -t 5m -H https://asd.com -f /path/example_test.py`
 
 ## Contribute
-run linter
-`pycodestyle scripts/`
+This was done taking in consideration some of the obstacles that were felt during the creation and execution of load tests 
+in a given environment, it will not be a tool to rule them all. So new contributions will be gladly accepted from the 
+community.
 
-locust -t 1s -u 1 -f test.py --headless -H https://qa.ubp.ubiwhere.com --loglevel DEBUG --logfile asd
+To contribute, report a bug, or propose an improvement use an `Issue` to expose it and generate a discussion. Describe 
+the best the idea, link relevant information, and in case there is already a branch with the change link it in the `Issue`.
 
-python scripts/generate_endpoints.py -f "/home/alex/Downloads/Urban Platform API (v3.36.0).yaml"
+Hope this helps!!!
 
-python scripts/generate_endpoints.py -f "/home/alex/Downloads/petstore.yaml"
+## Appendix
+### Open API v3 yaml example
+```commandline
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Swagger Petstore
+  license:
+    name: MIT
+servers:
+  - url: http://petstore.swagger.io/v1
+paths:
+  /pets:
+    get:
+      summary: List all pets
+      operationId: listPets
+      tags:
+        - pets
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          schema:
+            type: integer
+            maximum: 100
+            format: int32
+      responses:
+        '200':
+          description: A paged array of pets
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Pets"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create a pet
+      operationId: createPets
+      tags:
+        - pets
+      responses:
+        '201':
+          description: Null response
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /pets/{petId}:
+    get:
+      summary: Info for a specific pet
+      operationId: showPetById
+      tags:
+        - pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Pet:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        tag:
+          type: string
+    Pets:
+      type: array
+      maxItems: 100
+      items:
+        $ref: "#/components/schemas/Pet"
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+```
 
-rm -r endpoints/
+### Helping commands
+**Python linter**
+- `pycodestyle scripts/`
 
-https://github.com/OAI/OpenAPI-Specification/blob/main/examples/v3.0/petstore.yaml
+**Execute generator**
+- `python scripts/generate_endpoints.py -f "/home/path/Downloads/petstore.yaml"`
+
+**Execute runner**
+- `python run_tests.py -u 5 -r 5 -t 5m -f example_test.py -H https://domain.com`
+
+**Locust execution**
+- `locust -t 1s -u 1 -f example_test.py --headless -H https://domain.com --loglevel DEBUG --logfile asd`
