@@ -27,10 +27,10 @@ REQUESTS_ID_DOC: str = "#  This request needs an id to be included in the " \
                        "id=\"/qwer-1234-asdasdasd-123\")."
 
 PARAMETERS_DOC: str = "#  List of all the parameters exposed in the swagger" \
-                      " file, with a comment\n#  referring the type, that " \
+                      " file, with a comment\n#  referring the type, this " \
                       "can be used when creating the test requests. The\n" \
                       "#  name of this file is linked with a request " \
-                      "function in the class of\n#  this folder."
+                      "function in the class in\n#  this folder."
 
 
 #  Generate the base path in the project to store the endpoints artifacts.
@@ -52,7 +52,7 @@ def manage_arguments():
         description="Use this application to map the swagger endpoints to "
                     "the load testing.")
 
-    arg_parser.add_argument("-f", "--file",
+    arg_parser.add_argument("-f", "--file", required=True,
                             help="Full path for the swagger file path")
     args: Namespace = arg_parser.parse_args()
 
@@ -112,7 +112,7 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
             w: str = f"from http.cookiejar import CookieJar\n\n" \
                      f"import locust\n\n" \
                      f"{REQUESTS_ENDPOINT}\n" \
-                     f"ENDPOINT = \"{__ep}\"\n\n\n" \
+                     f"ENDPOINT: str = \"{__ep}\"\n\n\n" \
                      f"{REQUESTS_CLASS_DOC}\n" \
                      f"class {cn}:\n" \
                      f"    {REQUESTS_INIT_DOC}\n" \
