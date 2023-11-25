@@ -11,7 +11,7 @@
 <!-- TOC -->
 ## Introduction
 This repository aims to ease the creation of a load testing project by mapping the api automatically from the OpenAPI v3 
-`yaml` file.
+`yaml` or `json` file.
 
 Depending on the tests that will be done, the mapping of multiple requests can be cumbersome, reading the API documentation 
 and mapping the required endpoints and parameters to the test project. The main idea here was to reduce that step and be 
@@ -28,19 +28,19 @@ After that install the requirements using `pip` and the `requirements.txt` file 
 After this we are set to go.
 
 ## Build and Test
-To use this as a base for a new load testing project get the `yaml` (`.yml` or `.yaml`) file from the API documentation, 
+To use this as a base for a new load testing project get the *spec* file (`.yml`, `.yaml` or `json`) from the API documentation, 
 if using the Swagger template the `schema` url and/or a button to access the `schema` should be available.
 
 Then execute the Python script `scripts/generate_endpoints.py` with the `-f` argument with the full path to the downloaded 
 file. The script will create in the root of the project the `endpoints` folder and in it build the sub-folder with the files 
-mapping the information retrieved in the `yaml` file.
+mapping the information retrieved in the *spec* file.
 - `python scripts/generate_endpoints.py -h`
 - `python scripts/generate_endpoints.py -f /full/path/doc.yml`
 
 The sub-folders created will use the same structure as the API path, this was the easy way to organize the files and not 
 keep all of them in the same folder.
 
-For each endpoint it will create a sub-folder, in it a file with the name given in the `yaml`, in the file a variable 
+For each endpoint it will create a sub-folder, in it a file with the name given in the *spec*, in the file a variable 
 with the endpoint and a `class`. The `class` will have methods with the all the API methods, in them the locust 
 implementation and the returning response.
 
@@ -49,7 +49,7 @@ ENDPOINT = "/pets"
 
 
 #  This class contains a list of the functions for this endpoint with all the
-#  requests that were exported from the swagger yaml file. To use this you
+#  requests that were exported from the swagger spec file. To use this you
 #  need to instantiate the class and pass the locust into it and after that we
 #  are able to start to build the tests.
 class Pets:
