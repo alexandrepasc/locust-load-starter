@@ -11,7 +11,7 @@
 <!-- TOC -->
 ## Introduction
 This repository aims to ease the creation of a load testing project by mapping the api automatically from the OpenAPI v3 
-`yaml` or `json file.
+`yaml` or `json` file.
 
 Depending on the tests that will be done, the mapping of multiple requests can be cumbersome, reading the API documentation 
 and mapping the required endpoints and parameters to the test project. The main idea here was to reduce that step and be 
