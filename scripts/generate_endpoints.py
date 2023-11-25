@@ -1,4 +1,6 @@
+import json
 import os
+import sys
 from re import sub
 from argparse import ArgumentParser, Namespace
 from typing import TextIO
@@ -53,13 +55,13 @@ def manage_arguments():
                     "the load testing.")
 
     arg_parser.add_argument("-f", "--file", required=True,
-                            help="Full path for the swagger file path")
+                            help="Full path for the swagger file")
     args: Namespace = arg_parser.parse_args()
 
     return args.file
 
 
-#  Open, read, and unserialize the yaml file.
+#  Open, read, and deserialize the yaml file.
 def get_yaml_content(__file: str):
     with open(__file, "r") as stream:
         try:
@@ -70,9 +72,30 @@ def get_yaml_content(__file: str):
     return __yml
 
 
+#  Open, read and deserialize the json file
+def get_json_content(file: str):
+    with open(file, "r") as stream:
+        try:
+            __json: dict = json.load(stream)
+        except json.JSONDecodeError as e:
+            print(e)
+
+    return __json
+
+
+#  Filter the file format execute the correct function and return the dictionary
+def get_content(file: str):
+    if file.find(".yml") or file.find(".yaml"):
+        return get_yaml_content(file)
+    elif file.find(".json"):
+        return get_json_content(file)
+    else:
+        print("File format not recognised. Supported formats \".yml\", \".yaml\" and \".json\".")
+        sys.exit(1)
+
+
 #  Create the folder to store the endpoint artifacts.
 def create_folder(__path: str, __folder: str):
-
     if not os.path.exists(__path + "/" + __folder):
         os.makedirs(__path + __folder)
 
@@ -83,8 +106,11 @@ def create_file(__path: str, __name: str):
         f: TextIO = open(__path + "/" + __name, "x")
         f.close()
 
-        f = open(__path + "/__init__.py", "x")
-        f.close()
+        try:
+            f = open(__path + "/__init__.py", "x")
+            f.close()
+        except FileExistsError:
+            return
 
 
 #  Generate the parameters file with all the content.
@@ -94,20 +120,20 @@ def generate_parameters_list(__path: str, __name: str, __params: dict):
 
         for i in __params:
             if i["in"] == "query":
-                w = w + i["name"] + " = \"" + i["name"] + "\"  # "\
+                w = w + i["name"] + " = \"" + i["name"] + "\"  # " \
                     + i["schema"]["type"] + "\n"
 
         f.write(w)
 
 
-#  Add the content to the for the class file.
+#  Add the content to the class file.
 def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                        __class_name: str):
-
     if os.path.exists(__file):
         with open(__file, "a") as f:
 
             cn: str = sub(r"(-)+", " ", __class_name).title().replace(" ", "")
+            cn = sub(r"(_)+", " ", cn).title().replace(" ", "")
 
             w: str = f"from http.cookiejar import CookieJar\n\n" \
                      f"import locust\n\n" \
@@ -121,7 +147,14 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
             f.write(w)
 
             for mk, mi in __dic.items():
-                oid: str = mk + "_" + mi["operationId"]
+                try:
+                    aux: str = mi["operationId"]
+                except TypeError:
+                    continue
+
+                aux = snake_case(aux)
+
+                oid: str = mk + "_" + aux
 
                 if "parameters" in mi:
                     param: str = "              " \
@@ -169,7 +202,14 @@ def append_path_parameter_content(__file_path: str, __file_name: str,
     if os.path.exists(__file_path + "/" + __file_name):
         with open(__file_path + "/" + __file_name, "a") as f:
             for mk, mi in __dict.items():
-                oid: str = mk + "_" + mi["operationId"] + "_id"
+                try:
+                    aux: str = mi["operationId"]
+                except TypeError:
+                    continue
+
+                aux = snake_case(aux)
+
+                oid: str = mk + "_" + aux + "_id"
 
                 if "parameters" in mi:
                     param: str = "              " \
@@ -216,7 +256,6 @@ def append_path_parameter_content(__file_path: str, __file_name: str,
 
 #  Manage the creation of the artifacts and write their content.
 def generate_artifacts(__content: dict, __path: str):
-
     for x, y in __content["paths"].items():
         xs: str = sub(r"(-)+", " ", x).replace(" ", "_")
 
@@ -247,12 +286,22 @@ def generate_artifacts(__content: dict, __path: str):
             append_path_parameter_content(__path + xs, __file_name, y)
 
 
+#  Convert string into snake case
+def snake_case(s):
+    # Replace hyphens with spaces, then apply regular expression substitutions for title case conversion
+    # and add an underscore between words, finally convert the result to lowercase
+    return '_'.join(
+        sub('([A-Z][a-z]+)', r' \1',
+            sub('([A-Z]+)', r' \1',
+                s.replace('-', ' '))).split()).lower()
+
+
 #  Main function that will be executed.
 if __name__ == "__main__":
     __path: str = manage_endpoint_path()
 
     __file: str = manage_arguments()
 
-    __content: dict = get_yaml_content(__file)
+    __content: dict = get_content(__file)
 
     generate_artifacts(__content, __path)
