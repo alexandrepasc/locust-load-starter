@@ -1,4 +1,6 @@
+import json
 import os
+import sys
 from re import sub
 from argparse import ArgumentParser, Namespace
 from typing import TextIO
@@ -53,13 +55,13 @@ def manage_arguments():
                     "the load testing.")
 
     arg_parser.add_argument("-f", "--file", required=True,
-                            help="Full path for the swagger file path")
+                            help="Full path for the swagger file")
     args: Namespace = arg_parser.parse_args()
 
     return args.file
 
 
-#  Open, read, and unserialize the yaml file.
+#  Open, read, and deserialize the yaml file.
 def get_yaml_content(__file: str):
     with open(__file, "r") as stream:
         try:
@@ -68,6 +70,28 @@ def get_yaml_content(__file: str):
             print(e)
 
     return __yml
+
+
+#  Open, read and deserialize the json file
+def get_json_content(file: str):
+    with open(file, "r") as stream:
+        try:
+            __json: dict = json.load(stream)
+        except json.JSONDecodeError as e:
+            print(e)
+
+    return __json
+
+
+#  Filter the file format execute the correct function and return the dictionary
+def get_content(file: str):
+    if file.find(".yml") or file.find(".yaml"):
+        return get_yaml_content(file)
+    elif file.find(".json"):
+        return get_json_content(file)
+    else:
+        print("File format not recognised. Supported formats \".yml\", \".yaml\" and \".json\".")
+        sys.exit(1)
 
 
 #  Create the folder to store the endpoint artifacts.
@@ -121,7 +145,12 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
             f.write(w)
 
             for mk, mi in __dic.items():
-                oid: str = mk + "_" + mi["operationId"]
+                try:
+                    aux: str = mi["operationId"]
+                except TypeError:
+                    continue
+
+                oid: str = mk + "_" + aux
 
                 if "parameters" in mi:
                     param: str = "              " \
@@ -169,7 +198,12 @@ def append_path_parameter_content(__file_path: str, __file_name: str,
     if os.path.exists(__file_path + "/" + __file_name):
         with open(__file_path + "/" + __file_name, "a") as f:
             for mk, mi in __dict.items():
-                oid: str = mk + "_" + mi["operationId"] + "_id"
+                try:
+                    aux: str = mi["operationId"]
+                except TypeError:
+                    continue
+
+                oid: str = mk + "_" + aux + "_id"
 
                 if "parameters" in mi:
                     param: str = "              " \
@@ -253,6 +287,6 @@ if __name__ == "__main__":
 
     __file: str = manage_arguments()
 
-    __content: dict = get_yaml_content(__file)
+    __content: dict = get_content(__file)
 
     generate_artifacts(__content, __path)
