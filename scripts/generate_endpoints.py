@@ -96,7 +96,6 @@ def get_content(file: str):
 
 #  Create the folder to store the endpoint artifacts.
 def create_folder(__path: str, __folder: str):
-
     if not os.path.exists(__path + "/" + __folder):
         os.makedirs(__path + __folder)
 
@@ -107,8 +106,11 @@ def create_file(__path: str, __name: str):
         f: TextIO = open(__path + "/" + __name, "x")
         f.close()
 
-        f = open(__path + "/__init__.py", "x")
-        f.close()
+        try:
+            f = open(__path + "/__init__.py", "x")
+            f.close()
+        except FileExistsError:
+            return
 
 
 #  Generate the parameters file with all the content.
@@ -118,20 +120,20 @@ def generate_parameters_list(__path: str, __name: str, __params: dict):
 
         for i in __params:
             if i["in"] == "query":
-                w = w + i["name"] + " = \"" + i["name"] + "\"  # "\
+                w = w + i["name"] + " = \"" + i["name"] + "\"  # " \
                     + i["schema"]["type"] + "\n"
 
         f.write(w)
 
 
-#  Add the content to the for the class file.
+#  Add the content to the class file.
 def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                        __class_name: str):
-
     if os.path.exists(__file):
         with open(__file, "a") as f:
 
             cn: str = sub(r"(-)+", " ", __class_name).title().replace(" ", "")
+            cn = sub(r"(_)+", " ", cn).title().replace(" ", "")
 
             w: str = f"from http.cookiejar import CookieJar\n\n" \
                      f"import locust\n\n" \
@@ -149,6 +151,8 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                     aux: str = mi["operationId"]
                 except TypeError:
                     continue
+
+                aux = snake_case(aux)
 
                 oid: str = mk + "_" + aux
 
@@ -203,6 +207,8 @@ def append_path_parameter_content(__file_path: str, __file_name: str,
                 except TypeError:
                     continue
 
+                aux = snake_case(aux)
+
                 oid: str = mk + "_" + aux + "_id"
 
                 if "parameters" in mi:
@@ -250,7 +256,6 @@ def append_path_parameter_content(__file_path: str, __file_name: str,
 
 #  Manage the creation of the artifacts and write their content.
 def generate_artifacts(__content: dict, __path: str):
-
     for x, y in __content["paths"].items():
         xs: str = sub(r"(-)+", " ", x).replace(" ", "_")
 
@@ -279,6 +284,16 @@ def generate_artifacts(__content: dict, __path: str):
 
             __file_name: str = xs.split("/")[len(xs.split("/")) - 1] + ".py"
             append_path_parameter_content(__path + xs, __file_name, y)
+
+
+#  Convert string into snake case
+def snake_case(s):
+    # Replace hyphens with spaces, then apply regular expression substitutions for title case conversion
+    # and add an underscore between words, finally convert the result to lowercase
+    return '_'.join(
+        sub('([A-Z][a-z]+)', r' \1',
+            sub('([A-Z]+)', r' \1',
+                s.replace('-', ' '))).split()).lower()
 
 
 #  Main function that will be executed.
