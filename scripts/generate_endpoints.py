@@ -12,7 +12,7 @@ REQUESTS_ENDPOINT: str = "#  The constant with the endpoint path used in " \
 
 REQUESTS_CLASS_DOC: str = "#  This class contains a list of the functions " \
                           "for this endpoint with all the\n#  requests " \
-                          "that were exported from the swagger yaml " \
+                          "that were exported from the swagger spec " \
                           "file. To use this you\n#  need to instantiate " \
                           "the class and pass the locust into it and " \
                           "after that we\n#  are able to start to build " \
