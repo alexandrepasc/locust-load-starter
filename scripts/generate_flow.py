@@ -111,8 +111,18 @@ def generate_imports(gi__content: dict, gi__eps: str, gi__flow_file: str):
 #  Creates the flow class with the same name as the file and write it.
 def generate_class(gc__flow_file: str):
     gc__aux_class_name: str = gc__flow_file.split(".")[-2].split("/")[-1]
+    gc__cn: str = sub(r"(-)+", " ", gc__aux_class_name).title().replace(" ", "")
+    gc__cn = sub(r"(_)+", " ", gc__cn).title().replace(" ", "")
+
     with open(gc__flow_file, "a") as f:
-        f.write(f"\n\nclass {gc__aux_class_name}(TaskSet):\n")
+        f.write(f"\n\nclass {gc__cn}(TaskSet):\n")
+        f.close()
+
+
+#  Create the task definition and write to file.
+def generate_task(gt__flow_file: str):
+    with open(gt__flow_file, "a") as f:
+        f.write(f"    @task\n    def task(self):\n")
         f.close()
 
 
@@ -128,3 +138,5 @@ if __name__ == "__main__":
     generate_imports(__content, eps, flow_file)
 
     generate_class(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + flow_file)
+
+    generate_task(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + flow_file)
