@@ -1,6 +1,7 @@
 import json
 import os
 from argparse import ArgumentParser, Namespace
+from re import sub
 from typing import TextIO
 
 SCRIPT_FULL_PATH: str = os.path.dirname(os.path.realpath(__file__))
@@ -61,13 +62,15 @@ def create_flow_file():
             return ff
 
 
+#  Finds the endpoint path from the endpoints folder and returns true if it exists, false if not.
 def find_path(item: str, ep_path: str):
     if os.path.isdir(ep_path + "/" + item):
         return True
     return False
 
 
-def generate_artifacts(__content: dict, __path: str, eps: str, flow_file: str):
+#  Look for the api calls urls, match them with the endpoints list, and write the imports to the flow file.
+def generate_imports(__content: dict, __path: str, eps: str, flow_file: str):
     write_aux: str = ""
 
     for ci in __content["log"]["entries"]:
@@ -80,8 +83,10 @@ def generate_artifacts(__content: dict, __path: str, eps: str, flow_file: str):
             if i == "":
                 continue
 
-            if find_path(path_aux + "/" + i, eps):
-                path_aux = path_aux + "/" + i
+            xs: str = sub(r"(-)+", " ", i).replace(" ", "_")
+
+            if find_path(path_aux + "/" + xs, eps):
+                path_aux = path_aux + "/" + xs
 
         print(path_aux)
 
@@ -95,7 +100,8 @@ def generate_artifacts(__content: dict, __path: str, eps: str, flow_file: str):
             w: str = f"{w}.{ia}"
 
         if w != "":
-            write_aux = write_aux + f"from {aux_root[-1]}{w} import *\n"
+            if write_aux.find(w) == -1:
+                write_aux = write_aux + f"from {aux_root[-1]}{w} import *\n"
 
     with open(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + flow_file, "a") as f:
         f.write(write_aux)
@@ -111,4 +117,4 @@ if __name__ == "__main__":
 
     flow_file: str = create_flow_file()
 
-    generate_artifacts(__content, __path, eps, flow_file)
+    generate_imports(__content, __path, eps, flow_file)
