@@ -54,7 +54,7 @@ def get_har_content(__file: str):
 #  the name, ex. flow_2. The file will be created in the tasks folder in the parent of the script folder.
 def create_flow_file():
     for i in range(1, 101):
-        ff: str = f"/task_{i}.py"
+        ff: str = f"/flow_{i}.py"
         if not os.path.exists(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + ff):
             f: TextIO = open(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + ff, "x")
             f.write("from locust import TaskSet, task\n\n")
@@ -70,10 +70,10 @@ def find_path(item: str, ep_path: str):
 
 
 #  Look for the api calls urls, match them with the endpoints list, and write the imports to the flow file.
-def generate_imports(__content: dict, __path: str, eps: str, flow_file: str):
+def generate_imports(gi__content: dict, gi__eps: str, gi__flow_file: str):
     write_aux: str = ""
 
-    for ci in __content["log"]["entries"]:
+    for ci in gi__content["log"]["entries"]:
         print(ci["request"])
         ci_aux: list = ci["request"]["url"].split("?")
         ci_aux: list = ci_aux[0].split("/")
@@ -85,13 +85,13 @@ def generate_imports(__content: dict, __path: str, eps: str, flow_file: str):
 
             xs: str = sub(r"(-)+", " ", i).replace(" ", "_")
 
-            if find_path(path_aux + "/" + xs, eps):
+            if find_path(path_aux + "/" + xs, gi__eps):
                 path_aux = path_aux + "/" + xs
 
         print(path_aux)
 
         aux_import: list[str] = path_aux.split("/")
-        aux_root: list[str] = eps.split("/")
+        aux_root: list[str] = gi__eps.split("/")
 
         w: str = ""
         for ia in aux_import:
@@ -103,8 +103,16 @@ def generate_imports(__content: dict, __path: str, eps: str, flow_file: str):
             if write_aux.find(w) == -1:
                 write_aux = write_aux + f"from {aux_root[-1]}{w} import *\n"
 
-    with open(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + flow_file, "a") as f:
+    with open(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + gi__flow_file, "a") as f:
         f.write(write_aux)
+        f.close()
+
+
+#  Creates the flow class with the same name as the file and write it.
+def generate_class(gc__flow_file: str):
+    gc__aux_class_name: str = gc__flow_file.split(".")[-2].split("/")[-1]
+    with open(gc__flow_file, "a") as f:
+        f.write(f"\n\nclass {gc__aux_class_name}(TaskSet):\n")
         f.close()
 
 
@@ -117,4 +125,6 @@ if __name__ == "__main__":
 
     flow_file: str = create_flow_file()
 
-    generate_imports(__content, __path, eps, flow_file)
+    generate_imports(__content, eps, flow_file)
+
+    generate_class(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + flow_file)
