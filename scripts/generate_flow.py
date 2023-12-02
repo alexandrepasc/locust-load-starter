@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from argparse import ArgumentParser, Namespace
 from re import sub
 from typing import TextIO
@@ -46,6 +47,7 @@ def get_har_content(__file: str):
             __har: dict = json.loads(f.read())
         except json.JSONDecoder as e:
             print(e)
+            sys.exit(1)
 
     return __har
 
@@ -74,7 +76,6 @@ def generate_imports(gi__content: dict, gi__eps: str, gi__flow_file: str):
     write_aux: str = ""
 
     for ci in gi__content["log"]["entries"]:
-        print(ci["request"])
         ci_aux: list = ci["request"]["url"].split("?")
         ci_aux: list = ci_aux[0].split("/")
 
@@ -87,8 +88,6 @@ def generate_imports(gi__content: dict, gi__eps: str, gi__flow_file: str):
 
             if find_path(path_aux + "/" + xs, gi__eps):
                 path_aux = path_aux + "/" + xs
-
-        print(path_aux)
 
         aux_import: list[str] = path_aux.split("/")
         aux_root: list[str] = gi__eps.split("/")
@@ -126,6 +125,47 @@ def generate_task(gt__flow_file: str):
         f.close()
 
 
+def build_flow(bf_flow_file, bf_eps_path: str, bf_content: dict):
+    final: str = ""
+
+    # loop through the requests of the har file
+    for ci in bf_content["log"]["entries"]:
+        print(ci["request"])
+        ci_aux: list = ci["request"]["url"].split("?")
+        ci_aux: list = ci_aux[0].split("/")
+
+        # loop through the request url steps and confirm the existence of the path in the endpoints folder
+        path_aux: str = ""
+        last: str = ""
+        for i in ci_aux:
+            if i == "":
+                continue
+
+            xs: str = sub(r"(-)+", " ", i).replace(" ", "_")
+
+            if find_path(path_aux + "/" + xs, bf_eps_path):
+                path_aux = path_aux + "/" + xs
+                last = i
+
+        if path_aux == "":
+            continue
+
+        # create the variables declaration of the imported classes
+        w: str = "        " + path_aux.split("/")[-1] + ": "
+        w_aux = sub(r"(-)+", " ", last).title().replace(" ", "")
+        w_aux = sub(r"(_)+", " ", w_aux).title().replace(" ", "")
+
+        w = w + w_aux + " = " + w_aux + "(self)\n"
+
+        if final.find(w) == -1:
+            final = final + w
+
+    with open(bf_flow_file, "a") as f:
+        f.write(f"{final}")
+        f.close()
+    return
+
+
 if __name__ == "__main__":
     __path: str = manage_tasks_path()
 
@@ -140,3 +180,5 @@ if __name__ == "__main__":
     generate_class(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + flow_file)
 
     generate_task(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + flow_file)
+
+    build_flow(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + flow_file, eps, __content)
