@@ -93,14 +93,18 @@ def generate_imports(gi__content: dict, gi__eps: str, gi__flow_file: str):
         aux_root: list[str] = gi__eps.split("/")
 
         w: str = ""
+        last: str = ""
         for ia in aux_import:
             if ia == "":
                 continue
             w: str = f"{w}.{ia}"
+            last = ia
 
         if w != "":
+            w = w + "." + last
+            last_aux: str = sub(r"(_)+", " ", last).replace(" ", "").title()
             if write_aux.find(w) == -1:
-                write_aux = write_aux + f"from {aux_root[-1]}{w} import *\n"
+                write_aux = write_aux + f"from {aux_root[-1]}{w} import {last_aux}\n"
 
     with open(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + gi__flow_file, "a") as f:
         f.write(write_aux)
