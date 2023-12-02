@@ -24,7 +24,8 @@ def manage_arguments():
     arg_parser = ArgumentParser(
         prog="generate_flow.py",
         description="Use this application to map the har sequence of calls "
-                    "to a locust task.")
+                    "to a locust task. This will use the generated data that "
+                    "the generate_endpoints.py script creates.")
 
     arg_parser.add_argument("-f", "--file", required=True,
                             help="Full path for the har file path")
