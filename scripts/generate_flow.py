@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 from argparse import ArgumentParser, Namespace
 from re import sub
@@ -130,11 +131,13 @@ def generate_task(gt__flow_file: str):
         f.close()
 
 
-def build_flow(bf_flow_file, bf_eps_path: str, bf_content: dict):
+#  Read the requests from the har file, link the requests with the corresponding endpoint folder path, and create/write
+#  the variables instantiating the classes.
+def create_variables(cv_flow_file: str, cv_eps_path: str, cv_content: dict):
     final: str = ""
 
     # loop through the requests of the har file
-    for ci in bf_content["log"]["entries"]:
+    for ci in cv_content["log"]["entries"]:
         print(ci["request"])
         ci_aux: list = ci["request"]["url"].split("?")
         ci_aux: list = ci_aux[0].split("/")
@@ -148,7 +151,7 @@ def build_flow(bf_flow_file, bf_eps_path: str, bf_content: dict):
 
             xs: str = sub(r"(-)+", " ", i).replace(" ", "_")
 
-            if find_path(path_aux + "/" + xs, bf_eps_path):
+            if find_path(path_aux + "/" + xs, cv_eps_path):
                 path_aux = path_aux + "/" + xs
                 last = i
 
@@ -165,10 +168,57 @@ def build_flow(bf_flow_file, bf_eps_path: str, bf_content: dict):
         if final.find(w) == -1:
             final = final + w
 
-    with open(bf_flow_file, "a") as f:
+    with open(cv_flow_file, "a") as f:
         f.write(f"{final}")
         f.close()
-    return
+
+
+#  Loop through the requests from the har file, link the requests and methods to the corresponding endpoint function,
+#  and create/write the invocation of the function.
+def create_function_invocation(cfi_flow_file: str, cfi_eps_path: str, cfi_content: dict):
+    # loop through the requests of the har file
+    for ci in cfi_content["log"]["entries"]:
+        print(ci["request"])
+        ci_aux: list = ci["request"]["url"].split("?")
+        ci_aux: list = ci_aux[0].split("/")
+
+        # loop through the request url steps and confirm the existence of the path in the endpoints folder
+        path_aux: str = ""
+        last: str = ""
+        for i in ci_aux:
+            if i == "":
+                continue
+
+            xs: str = sub(r"(-)+", " ", i).replace(" ", "_")
+
+            if find_path(path_aux + "/" + xs, cfi_eps_path):
+                path_aux = path_aux + "/" + xs
+                last = i
+
+        if path_aux == "":
+            continue
+
+        l_aux: str = ""
+        with open(eps + "/" + path_aux + "/" + path_aux.split("/")[-1] + ".py", "r") as f:
+            for line in f:
+                i_aux: str = ci["request"]["method"] + "_"
+                if i_aux.upper() in line.upper() and last.upper() in line.upper():
+                    l_aux = line
+                    break
+            f.close()
+
+        if l_aux != "":
+            w_aux: str = path_aux.split("/")[-1] + "." + l_aux[4:-1].split(" ")[1].split("(")[0] + "()"
+            with open(cfi_flow_file, "a") as f:
+                f.write(f"\n        {w_aux}\n")
+                f.close()
+
+
+def build_flow(bf_flow_file: str, bf_eps_path: str, bf_content: dict):
+
+    create_variables(bf_flow_file, bf_eps_path, bf_content)
+
+    create_function_invocation(bf_flow_file, bf_eps_path, bf_content)
 
 
 if __name__ == "__main__":
