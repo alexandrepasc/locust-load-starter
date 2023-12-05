@@ -202,13 +202,22 @@ def create_function_invocation(cfi_flow_file: str, cfi_eps_path: str, cfi_conten
         with open(eps + "/" + path_aux + "/" + path_aux.split("/")[-1] + ".py", "r") as f:
             for line in f:
                 i_aux: str = ci["request"]["method"] + "_"
-                if i_aux.upper() in line.upper() and last.upper() in line.upper():
+                last_aux: str = sub(r"(-)+", " ", last).replace(" ", "_")
+                if i_aux.upper() in line.upper() and last_aux.upper() in line.upper():
                     l_aux = line
                     break
             f.close()
 
         if l_aux != "":
-            w_aux: str = path_aux.split("/")[-1] + "." + l_aux[4:-1].split(" ")[1].split("(")[0] + "()"
+            w_aux: str = path_aux.split("/")[-1] + "." + l_aux[4:-1].split(" ")[1].split("(")[0] + "("
+
+            if "postData" in ci["request"]:
+                print(ci["request"]["postData"]["text"])
+                pd_aux: str = sub(r"(\")+", " ", ci["request"]["postData"]["text"]).replace(" ", "\\\"")
+                w_aux = w_aux + "\n            json=\"" + pd_aux + "\""
+
+            w_aux = w_aux + "\n        )"
+
             with open(cfi_flow_file, "a") as f:
                 f.write(f"\n        {w_aux}\n")
                 f.close()
