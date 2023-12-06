@@ -274,7 +274,7 @@ def generate_artifacts(__content: dict, __path: str):
             create_file(__file_path, __file_name)
 
             build_file_content(y, __file_path + "/" + __file_name,
-                               __file_path, xs, __class_name)
+                               __file_path, x, __class_name)
         else:
             if xs[len(xs) - 1] == "/":
                 xs = xs[:len(xs) - 1]
