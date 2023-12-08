@@ -1,6 +1,5 @@
 import json
 import os
-import re
 import sys
 from argparse import ArgumentParser, Namespace
 from re import sub
@@ -61,7 +60,7 @@ def create_flow_file():
         ff: str = f"/flow_{i}.py"
         if not os.path.exists(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + ff):
             f: TextIO = open(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + ff, "x")
-            f.write("from locust import TaskSet, task\n\n")
+            f.write("import json\n\nfrom locust import TaskSet, task\n\n")
             f.close()
             return ff
 
@@ -214,9 +213,11 @@ def create_function_invocation(cfi_flow_file: str, cfi_eps_path: str, cfi_conten
             if "postData" in ci["request"]:
                 print(ci["request"]["postData"]["text"])
                 pd_aux: str = sub(r"(\")+", " ", ci["request"]["postData"]["text"]).replace(" ", "\\\"")
-                w_aux = w_aux + "\n            json=\"" + pd_aux + "\""
+                w_aux = w_aux + "\n            json=json.loads(\"" + pd_aux + "\"),"
 
-            w_aux = w_aux + "\n        )"
+                w_aux = w_aux + "\n        "
+
+            w_aux = w_aux + ")"
 
             with open(cfi_flow_file, "a") as f:
                 f.write(f"\n        {w_aux}\n")
