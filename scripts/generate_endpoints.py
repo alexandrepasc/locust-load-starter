@@ -136,7 +136,8 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
             cn = sub(r"(_)+", " ", cn).title().replace(" ", "")
 
             w: str = f"from http.cookiejar import CookieJar\n\n" \
-                     f"import locust\n\n" \
+                     f"import locust\n" \
+                     f"from requests import Response\n\n" \
                      f"{REQUESTS_ENDPOINT}\n" \
                      f"ENDPOINT: str = \"{__ep}\"\n\n\n" \
                      f"{REQUESTS_CLASS_DOC}\n" \
@@ -179,7 +180,7 @@ def build_file_content(__dic: dict, __file: str, __path: str, __ep: str,
                           f"              files: dict[str, any] = None,\n" \
                           f"              redirect: bool = False,\n" \
                           f"              verify: bool = True):\n\n" \
-                          f"        response = self.loc.client.{mk}(\n" \
+                          f"        response: Response = self.loc.client.{mk}(\n" \
                           f"            ENDPOINT,\n" \
                           f"{param_entry}" \
                           f"            headers=headers,\n" \
