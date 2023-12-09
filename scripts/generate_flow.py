@@ -272,6 +272,7 @@ def create_function_invocation(cfi_flow_file: str, cfi_eps_path: str, cfi_conten
                 f.close()
 
 
+#  Call the functions to generate the content of the flow using the har file and the endpoints files as base.
 def build_flow(bf_flow_file: str, bf_eps_path: str, bf_content: dict):
 
     create_variables(bf_flow_file, bf_eps_path, bf_content)
