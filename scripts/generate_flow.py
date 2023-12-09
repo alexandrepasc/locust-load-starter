@@ -2,6 +2,7 @@ import json
 import os
 import sys
 from argparse import ArgumentParser, Namespace
+from os.path import isfile, join
 from re import sub
 from typing import TextIO
 
@@ -78,6 +79,13 @@ def generate_imports(gi__content: dict, gi__eps: str, gi__flow_file: str):
 
     for ci in gi__content["log"]["entries"]:
         ci_aux: list = ci["request"]["url"].split("?")
+
+        # check the existence of parameters in the call and if so store it
+        res = 1 in range(len(ci_aux))
+        params: str = ""
+        if res:
+            params = ci_aux[1]
+
         ci_aux: list = ci_aux[0].split("/")
 
         path_aux: str = ""
@@ -102,10 +110,21 @@ def generate_imports(gi__content: dict, gi__eps: str, gi__flow_file: str):
             last = ia
 
         if w != "":
+            w_aux: str = w
             w = w + "." + last
             last_aux: str = sub(r"(_)+", " ", last).replace(" ", "").title()
             if write_aux.find(w) == -1:
                 write_aux = write_aux + f"from {aux_root[-1]}{w} import {last_aux}\n"
+
+                # if the request has parameters find the endpoints file with the list of the parameters and add the
+                # import into the flow file
+                if res:
+                    files = [f for f in os.listdir(gi__eps + path_aux) if isfile(join(gi__eps + path_aux, f))]
+
+                    for f in files:
+                        if f.find(last) > -1 and f.upper().find(ci["request"]["method"].upper()) > -1:
+                            f_aux: str = f.split(".")[0]
+                            write_aux = write_aux + f"from {aux_root[-1]}{w_aux}.{f_aux} import *\n"
 
     with open(SCRIPT_FULL_PATH + TASKS_SUB_FOLDER + gi__flow_file, "a") as f:
         f.write(write_aux)
