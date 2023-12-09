@@ -331,8 +331,11 @@ components:
 **Python linter**
 - `pycodestyle scripts/`
 
-**Execute generator**
+**Execute endpoints generator**
 - `python scripts/generate_endpoints.py -f "/home/path/Downloads/petstore.yaml"`
+
+**Execute flow generator**
+- `python scripts/generate_flow.py -f /home/path/Downloads/petstore.har -e /home/path/locust-load-starter/endpoints`
 
 **Execute runner**
 - `python run_tests.py -u 5 -r 5 -t 5m -f example_test.py -H https://domain.com`
