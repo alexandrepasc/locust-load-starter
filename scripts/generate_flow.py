@@ -82,9 +82,6 @@ def generate_imports(gi__content: dict, gi__eps: str, gi__flow_file: str):
 
         # check the existence of parameters in the call and if so store it
         res = 1 in range(len(ci_aux))
-        params: str = ""
-        if res:
-            params = ci_aux[1]
 
         ci_aux: list = ci_aux[0].split("/")
 
@@ -198,6 +195,13 @@ def create_function_invocation(cfi_flow_file: str, cfi_eps_path: str, cfi_conten
     for ci in cfi_content["log"]["entries"]:
         print(ci["request"])
         ci_aux: list = ci["request"]["url"].split("?")
+
+        # check the existence of parameters in the call and if so store it
+        res = 1 in range(len(ci_aux))
+        params: str = ""
+        if res:
+            params = ci_aux[1]
+
         ci_aux: list = ci_aux[0].split("/")
 
         # loop through the request url steps and confirm the existence of the path in the endpoints folder
@@ -227,13 +231,38 @@ def create_function_invocation(cfi_flow_file: str, cfi_eps_path: str, cfi_conten
             f.close()
 
         if l_aux != "":
+            # to validate if the function has properties added to handle the style
+            has_property: bool = False
+
             w_aux: str = path_aux.split("/")[-1] + "." + l_aux[4:-1].split(" ")[1].split("(")[0] + "("
+
+            # if the request has parameters
+            if res:
+                params_l: list[str] = params.split("&")
+
+                params_aux: str = "\n            params={"
+
+                # loop through the request list of parameters
+                for i in params_l:
+                    if i.split("=")[1] == "true" or i.split("=")[1] == "false":
+                        val_aux: str = i.split("=")[1].title()
+                    else:
+                        val_aux: str = "\"" + i.split("=")[1] + "\""
+
+                    params_aux = params_aux + i.split("=")[0] + ": " + val_aux + ", "
+
+                params_aux = params_aux + "},"
+
+                w_aux = w_aux + params_aux
+                has_property = True
 
             if "postData" in ci["request"]:
                 print(ci["request"]["postData"]["text"])
                 pd_aux: str = sub(r"(\")+", " ", ci["request"]["postData"]["text"]).replace(" ", "\\\"")
                 w_aux = w_aux + "\n            json=json.loads(\"" + pd_aux + "\"),"
+                has_property = True
 
+            if has_property:
                 w_aux = w_aux + "\n        "
 
             w_aux = w_aux + ")"
