@@ -190,14 +190,22 @@ file being outdated, so bear in mind open the created file to be sure that it is
 need to be created manually, there is no automation regarding this.
 
 ### Execute Locust Tests
-There is another script in this repository called `run_tests.py`, this was created to be able to execute unattended tests, 
+There is another script in this repository called `run_tests.py`, this was created to be able to execute unattended tests 
 and be able to have the reports with some important information to help creating a manual report after. In cases that 
 there is a necessity to execute multiple tests in a row and after the execution a manual report needs to be created with 
-the summary of all the tests the timestamp, the users, time,... and all the locust reports is important. With this script 
+the summary of all the tests, the timestamp, the users, time,... and all the locust reports are important. With this script 
 all of this information will be in the `html` and `csv` files name automatically, without any need to set that when starting 
-the test. This script will create the `reports` folder in the location where the script is located.
+the test. This script will create the `reports` folder in the location where the script is stored.
+
 - `python run_tests.py -h`
 - `python run_tests.py -u 50 -r 5 -t 5m -H https://asd.com -f /path/example_test.py`
+
+This script has a limited number of flags and in some case more configurations need to be passed to the *Locus* execution. 
+To give the ability to add more configurations to the test execution the tester can use the flag `-e`/`--extra` where the 
+user is able to pass any of the un-supported flags directly to *Locust*. The value(s) passed to these flags needs to be 
+enclosed in quotes.
+
+- `python run_tests.py -e "--loglevel ERROR --logfile ./test.log"`
 
 ## Contribute
 This was done taking in consideration some of the obstacles that were felt during the creation and execution of load tests 

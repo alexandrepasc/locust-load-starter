@@ -30,8 +30,16 @@ arg_parser.add_argument("-f", "--file", required=True,
                         help="Full path for the locust test file")
 arg_parser.add_argument("-H", "--host", required=True,
                         help="Host to load test")
+arg_parser.add_argument("-e", "--extra", dest="extra",
+                        help="Pass any of the not supported script flags directly to Locust, all the values must be "
+                             "under quotes (-e \"--worker --json\")")
 
 args: Namespace = arg_parser.parse_args()
+
+extra: str = ""
+
+if args.extra is not None:
+    extra = " " + args.extra
 
 test_name: str = args.file
 
@@ -49,8 +57,8 @@ locust_command: str = f"locust -u {args.users} -r {args.spawn_rate} " \
                       f"--headless " \
                       f"--html {reports_path}/{report_name}.html " \
                       f"--csv {reports_path}/{report_name} " \
-                      f"--csv-full-history"
+                      f"--csv-full-history {extra}"
 
-print(locust_command)
+print("\n" + locust_command)
 
 os.system(locust_command)
